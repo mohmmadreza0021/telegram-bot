@@ -2,8 +2,10 @@ import sqlite3
 import asyncio
 import uuid
 import os
-from aiogram import Bot, Dispatcher, types
+from aiogram import Bot, Dispatcher, types, F
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.filters import Command
+from aiogram.fsm.storage.memory import MemoryStorage
 
 # دریافت مقادیر از متغیرهای محیطی
 TOKEN = os.getenv("BOT_TOKEN")
@@ -22,15 +24,18 @@ conn.commit()
 
 # تنظیمات ربات
 bot = Bot(token=TOKEN)
-dp = Dispatcher()
+dp = Dispatcher(storage=MemoryStorage())
 
 # بررسی عضویت در کانال
 async def is_subscribed(user_id):
-    chat_member = await bot.get_chat_member(CHANNEL_ID, user_id)
-    return chat_member.status in ['member', 'administrator', 'creator']
+    try:
+        chat_member = await bot.get_chat_member(CHANNEL_ID, user_id)
+        return chat_member.status in ['member', 'administrator', 'creator']
+    except Exception:
+        return False
 
 # دستور `/start`
-@dp.message(commands=['start'])
+@dp.message(Command("start"))
 async def start_command(message: types.Message):
     user_id = message.from_user.id
     args = message.text.split(" ")[1:] if len(message.text.split(" ")) > 1 else []
@@ -69,9 +74,9 @@ async def send_text(message: types.Message, text_id):
         await message.answer("⛔ متن یافت نشد یا حذف شده است.")
 
 # افزودن متن توسط ادمین
-@dp.message(commands=['add'])
+@dp.message(Command("add"))
 async def add_text(message: types.Message):
-    if message.from_user.id != 123456789:
+    if message.from_user.id != 123456789:  # آیدی تلگرام خودت رو اینجا بذار
         return await message.answer("⛔ شما اجازه افزودن متن را ندارید.")
 
     text_content = message.text.replace("/add", "").strip()
@@ -87,6 +92,7 @@ async def add_text(message: types.Message):
 
 # اجرای ربات با asyncio
 async def main():
+    print("✅ Bot is running...")
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
