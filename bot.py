@@ -2,7 +2,7 @@ import sqlite3
 import asyncio
 import uuid
 import os
-from aiogram import Bot, Dispatcher, types, F
+from aiogram import Bot, Dispatcher, types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.filters import Command
 from aiogram.fsm.storage.memory import MemoryStorage
@@ -93,6 +93,10 @@ async def add_text(message: types.Message):
 # اجرای ربات با asyncio
 async def main():
     print("✅ Bot is running...")
+
+    # حذف Webhook برای جلوگیری از Conflict
+    await bot.delete_webhook(drop_pending_updates=True)
+
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
