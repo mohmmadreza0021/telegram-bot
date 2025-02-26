@@ -76,7 +76,7 @@ async def send_text(message: types.Message, text_id):
 # افزودن متن توسط ادمین
 @dp.message(Command("add"))
 async def add_text(message: types.Message):
-    if message.from_user.id != 123456789:  # آیدی تلگرام خودت رو اینجا بذار
+    if message.from_user.id != ADMIN_ID:  # آیدی تلگرام خودت رو اینجا بذار
         return await message.answer("⛔ شما اجازه افزودن متن را ندارید.")
 
     text_content = message.text.replace("/add", "").strip()
