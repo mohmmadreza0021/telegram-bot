@@ -87,7 +87,7 @@ async def add_text(message: types.Message):
     cursor.execute("INSERT INTO texts (id, content) VALUES (?, ?)", (text_id, text_content))
     conn.commit()
 
-    link = f"https://t.me/YourBot?start={text_id}"
+    link = f"https://t.me/tester365irbot?start={text_id}"
     await message.answer(f"✅ متن ذخیره شد!\n\n🔗 لینک: {link}")
 
 # اجرای ربات با asyncio
