@@ -4,7 +4,6 @@ import uuid
 import os
 from aiogram import Bot, Dispatcher, types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from aiogram.utils import executor
 
 # دریافت مقادیر از متغیرهای محیطی
 TOKEN = os.getenv("BOT_TOKEN")
@@ -23,7 +22,7 @@ conn.commit()
 
 # تنظیمات ربات
 bot = Bot(token=TOKEN)
-dp = Dispatcher(bot)
+dp = Dispatcher()
 
 # بررسی عضویت در کانال
 async def is_subscribed(user_id):
@@ -31,18 +30,18 @@ async def is_subscribed(user_id):
     return chat_member.status in ['member', 'administrator', 'creator']
 
 # دستور `/start`
-@dp.message_handler(commands=['start'])
+@dp.message(commands=['start'])
 async def start_command(message: types.Message):
     user_id = message.from_user.id
-    args = message.get_args()
+    args = message.text.split(" ")[1:] if len(message.text.split(" ")) > 1 else []
 
     if args:
-        return await send_text(message, args)
+        return await send_text(message, args[0])
 
     if not await is_subscribed(user_id):
-        keyboard = InlineKeyboardMarkup().add(
-            InlineKeyboardButton("✅ عضویت در کانال", url=f"https://t.me/{CHANNEL_ID[1:]}")
-        )
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="✅ عضویت در کانال", url=f"https://t.me/{CHANNEL_ID[1:]}")]
+        ])
         return await message.answer("📢 لطفاً ابتدا در کانال عضو شوید.", reply_markup=keyboard)
 
     await message.answer("✅ خوش آمدید! از ربات استفاده کنید.")
@@ -52,9 +51,9 @@ async def send_text(message: types.Message, text_id):
     user_id = message.from_user.id
 
     if not await is_subscribed(user_id):
-        keyboard = InlineKeyboardMarkup().add(
-            InlineKeyboardButton("✅ عضویت در کانال", url=f"https://t.me/{CHANNEL_ID[1:]}")
-        )
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="✅ عضویت در کانال", url=f"https://t.me/{CHANNEL_ID[1:]}")]
+        ])
         return await message.answer("📢 لطفاً ابتدا در کانال عضو شوید.", reply_markup=keyboard)
 
     cursor.execute("SELECT content FROM texts WHERE id = ?", (text_id,))
@@ -70,7 +69,7 @@ async def send_text(message: types.Message, text_id):
         await message.answer("⛔ متن یافت نشد یا حذف شده است.")
 
 # افزودن متن توسط ادمین
-@dp.message_handler(commands=['add'])
+@dp.message(commands=['add'])
 async def add_text(message: types.Message):
     if message.from_user.id != 123456789:
         return await message.answer("⛔ شما اجازه افزودن متن را ندارید.")
@@ -86,6 +85,9 @@ async def add_text(message: types.Message):
     link = f"https://t.me/YourBot?start={text_id}"
     await message.answer(f"✅ متن ذخیره شد!\n\n🔗 لینک: {link}")
 
-# اجرای ربات
+# اجرای ربات با asyncio
+async def main():
+    await dp.start_polling(bot)
+
 if __name__ == "__main__":
-    executor.start_polling(dp, skip_updates=True)
+    asyncio.run(main())
